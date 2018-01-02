@@ -4,8 +4,17 @@ public class AnnotatedBeanDefinition implements BeanDefinition{
 
     private MethodData factoryMethodData;
 
+    private String beanClassName;
 
-    private String scope;
+    private String scope = "singleton";
+
+    public String getBeanClassName() {
+        return beanClassName;
+    }
+
+    public void setBeanClassName(String beanClassName) {
+        this.beanClassName = beanClassName;
+    }
 
     public void setScope(String scope) {
         this.scope = scope;

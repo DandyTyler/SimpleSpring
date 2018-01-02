@@ -9,6 +9,10 @@ public interface BeanDefinition {
 
     String getScope();
 
+    String getBeanClassName();
+
+    void setBeanClassName(String beanClassName);
+
     MethodData getFactoryMethodData();
 
     void setFactoryMethodData(MethodData factoryMethodData);

@@ -1,15 +1,24 @@
-import com.akos.context.annotations.Bean;
-import com.akos.context.annotations.Configuration;
+import com.akos.context.annotation.Bean;
+import com.akos.context.annotation.Configuration;
+import com.akos.context.annotation.Scope;
+import annotations.InjectIntAnnotationBeanPostProcessor;
 
 @Configuration
 public class Context {
+
     @Bean
-    public String helloString(){
-        return "Hello";
+    public InjectIntAnnotationBeanPostProcessor intProcessor(){
+        return new InjectIntAnnotationBeanPostProcessor();
     }
 
     @Bean
-    public Printer printer1(){
-        return new Printer(helloString());
+    public PrintableString helloString(){
+        return new PrintableString("Hello!");
+    }
+
+    @Bean
+    @Scope(scopeName = "prototype")
+    public Printer printer1() {
+        return new Printer();
     }
 }

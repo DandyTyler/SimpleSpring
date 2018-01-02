@@ -1,11 +1,20 @@
-public class Printer {
-    String str;
+import com.akos.context.annotation.Autowired;
+import annotations.InjectInt;
 
-    public Printer(String str) {
-        this.str = str;
+public class Printer {
+
+    // TODO: 02.01.2018  Реализовать autowired
+    @Autowired
+    PrintableString string;
+
+    public Printer() {
     }
 
-    public void print(){
-        System.out.println(str);
+    public Printer(PrintableString string) {
+        this.string = string;
+    }
+
+    public void print() {
+        System.out.println(string.getValue());
     }
 }

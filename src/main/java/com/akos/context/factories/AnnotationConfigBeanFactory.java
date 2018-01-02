@@ -1,16 +1,19 @@
 package com.akos.context.factories;
 
-import com.akos.context.annotations.Bean;
-import com.akos.context.annotations.Configuration;
-import com.akos.context.bean.AnnotatedBeanDefinition;
 import com.akos.context.bean.BeanDefinition;
 import com.akos.context.bean.MethodData;
-import com.akos.context.bean.MethodDataImpl;
+import com.akos.context.factories.config.AnnotatedBeanDefinitionReader;
+import com.akos.context.factories.config.BeanPostProcessor;
+
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+// TODO: 02.01.2018 Добавить сканнер компонентов
 
 /**
  * Создает бины из на основе классов, отмеченных аннотацией @Configuration. Пока что у бина может быть всего одно имя
@@ -22,59 +25,75 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
 
     private Map<String, BeanDefinition> beansDefinitions = new HashMap<>();
 
+    private AnnotatedBeanDefinitionReader reader = new AnnotatedBeanDefinitionReader(beansDefinitions);
+
     public AnnotationConfigBeanFactory(Class<?>... annotatedClasses) {
-        fillBeansDefinitions(annotatedClasses);
+        reader.fillBeansDefinitions(annotatedClasses);
+        createBeans();
+        doPostProcessors();
     }
 
     /**
-     * Получает классы, отмеченные @Configuration и создает описания бинов на основе методов этих классов,
-     * отмеченыых аннотацией @Bean
-     * @param annotatedClasses классы, отмеченные @Configuration
-     */
-    private void fillBeansDefinitions(Class<?>... annotatedClasses) {
-        // TODO: 22.12.2017 Возможно стоит вынести методы для заполнения BeansDefinitions в отдельный класс
-        for (Class annotatedClass : annotatedClasses) {
-            if (annotatedClass.isAnnotationPresent(Configuration.class)) {
-                for (Method method : annotatedClass.getMethods()) {
-                    if (method.isAnnotationPresent(Bean.class)) {
-                        BeanDefinition beanDefinition = new AnnotatedBeanDefinition();
-                        beanDefinition.setFactoryMethodData(new MethodDataImpl(method));
-                        Bean beanAnnotation = method.getAnnotation(Bean.class);
-                        beanDefinition.setScope(beanAnnotation.scope());
-                        beansDefinitions.put(method.getName(), beanDefinition);
-                    }
-                }
-            } else throw new IllegalArgumentException("Class " + annotatedClass + "doesn't present @Configuration");
-        }
-    }
-    /**
      * Создает бины из описания вызвая фабричный метод
+     *
      * @param beanName
      */
-    private void createBean(String beanName) throws ClassNotFoundException, IllegalAccessException, InstantiationException, InvocationTargetException {
+    private void createBean(String beanName) {
+        // TODO: 02.01.2018 Сделать нормальную обработку исключений
         if (beansDefinitions.containsKey(beanName)) {
-            MethodData factoryMethodData = beansDefinitions.get(beanName).getFactoryMethodData();
-            Method method = factoryMethodData.getMethod();
-            Object bean = method.invoke(Class.forName(factoryMethodData.getDeclaringClassName()).newInstance(), null);
-            beans.put(beanName, bean);
+            try {
+                MethodData factoryMethodData = beansDefinitions.get(beanName).getFactoryMethodData();
+                Method method = factoryMethodData.getMethod();
+                Object bean = method.invoke(Class.forName(factoryMethodData.getDeclaringClassName()).newInstance(), null);
+                beans.put(beanName, bean);
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
         } else
             throw new IllegalArgumentException(beanName + " doesn't exist");
     }
 
+    private void createBeans() {
+        for (Map.Entry<String, BeanDefinition> entry : beansDefinitions.entrySet()) {
+            createBean(entry.getKey());
+        }
+    }
+
+    /**
+     * Применяет постпроцессоры ко всем бинам
+     */
+    private void doPostProcessors() {
+        List<BeanPostProcessor> postProcessors = new ArrayList<>();
+        for (Map.Entry<String, Object> entry : beans.entrySet()) {
+            doPostProcessors(entry.getValue(), entry.getKey());
+        }
+    }
+
+    // TODO: 02.01.2018 Хранить все постпроцесоры отдельно от остальных бинов, чтобы избежать постоянного вызова instanceof
+
+    /**
+     * Применяет постпроцессоры к конкретному бину
+     */
+    private void doPostProcessors(Object bean, String beanName) {
+        for (Map.Entry<String, Object> entry : beans.entrySet()) {
+            if (entry.getValue() instanceof BeanPostProcessor) {
+                BeanPostProcessor postProcessor = (BeanPostProcessor) entry.getValue();
+                bean = postProcessor.postProcess(bean, beanName);
+            }
+        }
+    }
+
     /**
      * Получаем бин по имени. Если бин уже был создан, то возвращаем его иначе пытаемся создать
+     *
      * @param beanName
      * @return
      */
     @Override
     public Object getBean(String beanName) {
-// TODO: 22.12.2017 реализовать работу со scope  обработку исключений
-        if (!beans.containsKey(beanName)) {
-            try {
-                createBean(beanName);
-            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
+        if (!beans.containsKey(beanName) | beansDefinitions.get(beanName).getScope().equals("prototype")) {
+            createBean(beanName);
+            doPostProcessors(beans.get(beanName), beanName);
         }
         return beans.get(beanName);
     }
