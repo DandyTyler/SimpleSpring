@@ -1,4 +1,4 @@
-package com.akos.context.factories.config;
+package com.akos.context.annotation.processor;
 
 /**
  * Определяет действия, котрые необходимо выполнить над бином, созданным из BeanDefinition с конструктором по умолчанию.

@@ -8,5 +8,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Autowired {
-    // TODO: 02.01.2018 реализовать обработку, добавить required и другие таргеты
+    // TODO: 03.01.2018 добавить required и другие таргеты
 }

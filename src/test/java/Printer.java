@@ -1,9 +1,7 @@
 import com.akos.context.annotation.Autowired;
-import annotations.InjectInt;
 
 public class Printer {
 
-    // TODO: 02.01.2018  Реализовать autowired
     @Autowired
     PrintableString string;
 

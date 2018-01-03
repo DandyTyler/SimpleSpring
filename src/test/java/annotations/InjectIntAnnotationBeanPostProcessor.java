@@ -1,6 +1,6 @@
 package annotations;
 
-import com.akos.context.factories.config.BeanPostProcessor;
+import com.akos.context.annotation.processor.BeanPostProcessor;
 
 import java.lang.reflect.Field;
 import java.util.Random;
