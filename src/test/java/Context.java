@@ -15,10 +15,10 @@ public class Context {
         return new PrintableString("Hello! "+ System.nanoTime());
     }
 
-//    @Bean
-//    public PrintableString2Version helloStringV2(){
-//        return new PrintableString2Version("Hello! "+ System.nanoTime());
-//    }
+    @Bean
+    public PrintableString2Version helloStringV2(){
+        return new PrintableString2Version("Hello! "+ System.nanoTime());
+    }
 
     @Bean
     @Scope(scopeName = "prototype")

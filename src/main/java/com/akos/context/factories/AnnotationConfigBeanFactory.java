@@ -53,7 +53,7 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
                 throw new BeanCreationException(e);
             }
         } else
-            throw new IllegalArgumentException(beanName + " doesn't exist");
+            throw new IllegalArgumentException("Bean with the name \""+beanName + "\" doesn't exist");
     }
 
     private void createBeans() {
@@ -72,6 +72,7 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
     }
 
     // TODO: 02.01.2018 Хранить все постпроцессоры отдельно от остальных бинов?
+
     /**
      * Находим бины, которые являются постпроцессороами и применяем их к переданному бину
      */
@@ -93,16 +94,22 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
      */
     @Override
     public Object getBean(String beanName) {
-        if (!beans.containsKey(beanName) | beansDefinitions.get(beanName).getScope().equals("prototype")) {
-            createBean(beanName);
-            doPostProcessors(beans.get(beanName), beanName);
+        if (beans.containsKey(beanName)) {
+            if (beansDefinitions.get(beanName).getScope().equals("prototype")) {
+                createBean(beanName);
+                doPostProcessors(beans.get(beanName), beanName);
+            }
+            return beans.get(beanName);
         }
+        createBean(beanName);
+        doPostProcessors(beans.get(beanName), beanName);
         return beans.get(beanName);
     }
 
     /**
      * Получение бина по классу. Если не существует бинов такого класса и его наследников или таких бинов несколько
      * кидается исключение
+     *
      * @param clazz
      * @param <T>
      * @return
@@ -121,7 +128,7 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
         if (candidates.size() == 1)
             return (T) getBean(candidates.get(0).getKey());
         if (candidates.size() > 1)
-            throw new IllegalArgumentException("There are several beans for " + clazz.getName()+" class");
+            throw new IllegalArgumentException("There are several beans for " + clazz.getName() + " class");
         throw new IllegalArgumentException("Bean for class " + clazz.getName() + " doesn't exist");
     }
 

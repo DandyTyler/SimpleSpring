@@ -1,9 +1,11 @@
 package com.akos.context.annotation.processor;
 
 import com.akos.context.annotation.Autowired;
+import com.akos.context.annotation.Qualifier;
 import com.akos.context.exception.AutowireException;
 import com.akos.context.factories.BeanFactory;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
 /**
@@ -24,6 +26,7 @@ public class AutowiredAnnotationBeanPostProcessor implements BeanPostProcessor {
 
     /**
      * Берем тип полей, отмеченных аннотацией Autowired, пытаемся получить бин такого типа из фабрики и установить его в поле
+     *
      * @param bean
      * @return
      */
@@ -32,6 +35,10 @@ public class AutowiredAnnotationBeanPostProcessor implements BeanPostProcessor {
             if (field.isAnnotationPresent(Autowired.class)) {
                 field.setAccessible(true);
                 try {
+                    if (field.isAnnotationPresent(Qualifier.class)) {
+                       field.set(bean,factory.getBean(field.getAnnotation(Qualifier.class).value()));
+                       return bean;
+                    }
                     field.set(bean, factory.getBean(field.getType()));
                 } catch (IllegalAccessException e) {
                     throw new AutowireException(e);
