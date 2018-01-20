@@ -1,3 +1,4 @@
+package components;
 
 public class PrintableString2Version extends PrintableString {
 

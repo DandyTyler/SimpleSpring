@@ -1,3 +1,5 @@
+package components;
+
 public class PrintableString {
     private String value;
 

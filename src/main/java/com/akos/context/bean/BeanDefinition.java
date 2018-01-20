@@ -9,6 +9,8 @@ public interface BeanDefinition {
 
     String getScope();
 
+
+
     String getBeanClassName();
 
     void setBeanClassName(String beanClassName);

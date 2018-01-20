@@ -1,5 +1,6 @@
 package com.akos.context.factories;
 
+import com.akos.context.annotation.Autowired;
 import com.akos.context.annotation.processor.AutowiredAnnotationBeanPostProcessor;
 import com.akos.context.bean.BeanDefinition;
 import com.akos.context.bean.MethodData;
@@ -8,11 +9,10 @@ import com.akos.context.factories.config.AnnotatedBeanDefinitionReader;
 import com.akos.context.annotation.processor.BeanPostProcessor;
 
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-
-// TODO: 02.01.2018 Добавить сканнер компонентов( и аннотации Component и ComponentScan)
 
 /**
  * Создает бины из на основе классов, отмеченных аннотацией @Configuration. Пока что у бина может быть всего одно имя
@@ -27,33 +27,58 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
     private AnnotatedBeanDefinitionReader reader = new AnnotatedBeanDefinitionReader(beansDefinitions);
 
     {
-        // TODO: 03.01.2018 сделать нормально, например отдельный класс для добавления стандартных обработчиков.
-        beans.put("randomName", new AutowiredAnnotationBeanPostProcessor(this));
+        beans.put("autowiredAnnotationBeanPostProcessor", new AutowiredAnnotationBeanPostProcessor(this));
     }
 
     public AnnotationConfigBeanFactory(Class<?>... annotatedClasses) {
-        reader.fillBeansDefinitions(annotatedClasses);
-        createBeans();
-        doPostProcessors();
+        registerBeans(annotatedClasses);
     }
 
     /**
      * Создает бины из описания вызвая фабричный метод
      *
-     * @param beanName
+     * @param beanName имя бина
      */
     private void createBean(String beanName) {
         if (beansDefinitions.containsKey(beanName)) {
             try {
                 MethodData factoryMethodData = beansDefinitions.get(beanName).getFactoryMethodData();
-                Method method = factoryMethodData.getMethod();
-                Object bean = method.invoke(Class.forName(factoryMethodData.getDeclaringClassName()).newInstance(), null);
-                beans.put(beanName, bean);
+                if (factoryMethodData != null) {
+                    Method method = factoryMethodData.getMethod();
+                    Object bean = method.invoke(Class.forName(factoryMethodData.getDeclaringClassName()).newInstance());
+                    beans.put(beanName, bean);
+                } else {
+                    Class beanClass = Class.forName(beansDefinitions.get(beanName).getBeanClassName());
+                    Constructor[] constructors = beanClass.getDeclaredConstructors();
+                    List<Constructor> autowiredAnnotatedConstructors = new ArrayList<>();
+                    for (Constructor constructor : constructors) {
+                        if (constructor.isAnnotationPresent(Autowired.class)) {
+                            autowiredAnnotatedConstructors.add(constructor);
+                        }
+                    }
+                    if (autowiredAnnotatedConstructors.size() == 0) {
+                        try {
+                            beans.put(beanName, beanClass.newInstance());
+                        } catch (InstantiationException e) {
+                            throw new BeanCreationException("No default constructor", e);
+                        }
+                    } else {
+                        if (autowiredAnnotatedConstructors.size() > 1)
+                            throw new BeanCreationException("Bean can't have more than 1 autowired constructor");
+                        Class[] paramTypes = autowiredAnnotatedConstructors.get(0).getParameterTypes();
+                        ArrayList<Object> autowiredArguments = new ArrayList<>();
+                        for (Class cl : paramTypes) {
+                            autowiredArguments.add(getBean(cl));
+                        }
+                        Object bean = autowiredAnnotatedConstructors.get(0).newInstance(autowiredArguments.toArray());
+                        beans.put(beanName, bean);
+                    }
+                }
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 throw new BeanCreationException(e);
             }
         } else
-            throw new IllegalArgumentException("Bean with the name \""+beanName + "\" doesn't exist");
+            throw new IllegalArgumentException("Bean with the name \"" + beanName + "\" doesn't exist");
     }
 
     private void createBeans() {
@@ -71,7 +96,6 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
         }
     }
 
-    // TODO: 02.01.2018 Хранить все постпроцессоры отдельно от остальных бинов?
 
     /**
      * Находим бины, которые являются постпроцессороами и применяем их к переданному бину
@@ -84,6 +108,13 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
             }
         }
     }
+
+    public void registerBeans(Class<?>... annotatedClasses) {
+        reader.fillBeansDefinitions(annotatedClasses);
+        createBeans();
+        doPostProcessors();
+    }
+
 
     /**
      * Получаем бин по имени. Если бин уже был создан, то возвращаем его иначе пытаемся создать. Если prototype то создаем
