@@ -20,7 +20,8 @@ import java.net.URL;
 /**
  * Получает классы, отмеченные @Configuration и создает описания бинов на основе методов этих классов,
  * отмеченыых аннотацией @Bean. Если в файле-конфигурация отмечен @ComponentScan сканирует указанные пакеты
- * на наличие компонентов
+ * на наличие компонентов. Если в @ComponentScan не указаны никакие пакеты сканирует пакет в котором лежит данный
+ * файл-конфигурация. Не работает с default пакетом.
  */
 public class AnnotatedBeanDefinitionReader {
 
@@ -30,14 +31,18 @@ public class AnnotatedBeanDefinitionReader {
     public AnnotatedBeanDefinitionReader(Map<String, BeanDefinition> beansDefinitions) {
         this.beansDefinitions = beansDefinitions;
     }
-    // TODO: 20.01.2018 Сделать возможность задания нескольких имен бина
+
     public void fillBeansDefinitions(Class<?>... annotatedClasses) {
         for (Class annotatedClass : annotatedClasses) {
             if (annotatedClass.isAnnotationPresent(Configuration.class)) {
                 if (annotatedClass.isAnnotationPresent(ComponentScan.class)) {
                     try {
                         ComponentScan componentScan = (ComponentScan) annotatedClass.getAnnotation(ComponentScan.class);
-                        List<Class> classes = scanner.getClasses(componentScan.value());
+                        List<Class> classes;
+                        if (componentScan.value().length == 0) {
+                            classes = scanner.getClasses(annotatedClass.getPackage().getName());
+                        } else
+                            classes = scanner.getClasses(componentScan.value());
                         for (Class cl : classes) {
                             if (cl.isAnnotationPresent(Component.class)) {
                                 BeanDefinition beanDefinition = new AnnotatedBeanDefinition();
@@ -47,10 +52,10 @@ public class AnnotatedBeanDefinitionReader {
                                 beanDefinition.setFactoryMethodData(null);
                                 beanDefinition.setBeanClassName(cl.getName());
                                 Component componentAnn = (Component) cl.getAnnotation(Component.class);
-                                String beanName = componentAnn.value();
-                                if (beanName.equals(""))
-                                    beansDefinitions.put(cl.getSimpleName(), beanDefinition);
-                                else beansDefinitions.put(beanName, beanDefinition);
+                                for (String beanName : componentAnn.value()) {
+                                    beansDefinitions.put(beanName, beanDefinition);
+                                }
+                                beansDefinitions.put(cl.getSimpleName(), beanDefinition);
                             }
                         }
                     } catch (ClassNotFoundException | IOException e) {
@@ -66,6 +71,9 @@ public class AnnotatedBeanDefinitionReader {
                         }
                         beanDefinition.setBeanClassName(method.getReturnType().getName());
                         beansDefinitions.put(method.getName(), beanDefinition);
+                        for (String beanName : method.getAnnotation(Bean.class).value()) {
+                            beansDefinitions.put(beanName, beanDefinition);
+                        }
                     }
                 }
             } else throw new IllegalArgumentException("Class " + annotatedClass + "doesn't present @Configuration");

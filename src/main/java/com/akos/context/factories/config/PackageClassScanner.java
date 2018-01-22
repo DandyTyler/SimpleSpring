@@ -26,15 +26,22 @@ public class PackageClassScanner {
         assert classLoader != null;
         String path = packageName.replace('.', '/');
         Enumeration<URL> resources = classLoader.getResources(path);
-        List<File> dirs = new ArrayList<File>();
+        List<File> dirs = new ArrayList<>();
         while (resources.hasMoreElements()) {
             URL resource = resources.nextElement();
             dirs.add(new File(resource.getFile()));
         }
-        ArrayList<Class> classes = new ArrayList<Class>();
+        ArrayList<Class> classes = new ArrayList<>();
         for (File directory : dirs) {
             classes.addAll(findClasses(directory, packageName));
         }
+        return classes;
+    }
+
+    public List<Class> getClasses(String... packageNames) throws IOException, ClassNotFoundException {
+        ArrayList<Class> classes = new ArrayList<>();
+        for (String packageName : packageNames)
+            classes.addAll(getClasses(packageName));
         return classes;
     }
 
@@ -47,7 +54,7 @@ public class PackageClassScanner {
      * @throws ClassNotFoundException
      */
     private List<Class> findClasses(File directory, String packageName) throws ClassNotFoundException {
-        List<Class> classes = new ArrayList<Class>();
+        List<Class> classes = new ArrayList<>();
         if (!directory.exists()) {
             return classes;
         }

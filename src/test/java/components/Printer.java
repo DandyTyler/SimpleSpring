@@ -1,10 +1,11 @@
 package components;
 
+
 import com.akos.context.annotation.Autowired;
-import com.akos.context.annotation.Qualifier;
 
 public class Printer {
 
+    @Autowired
     PrintableString string;
 
     public Printer() {

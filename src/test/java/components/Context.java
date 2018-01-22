@@ -15,7 +15,7 @@ public class Context {
 //        return new PrintableString("Hello! "+ System.nanoTime());
 //    }
 
-    @Bean
+    @Bean({"bean1","bean2"})
     public PrintableString2Version helloStringV2(){
         return new PrintableString2Version("Its works! "+ System.nanoTime());
     }

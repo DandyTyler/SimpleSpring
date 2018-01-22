@@ -3,7 +3,7 @@ package components;
 import com.akos.context.annotation.Autowired;
 import com.akos.context.annotation.Component;
 
-@Component("componentTest")
+@Component({"componentTest","componentTest2"})
 public class AutowiredConstructorTest {
     private PrintableString str;
 

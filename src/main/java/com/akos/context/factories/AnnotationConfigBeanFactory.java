@@ -96,7 +96,6 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
         }
     }
 
-
     /**
      * Находим бины, которые являются постпроцессороами и применяем их к переданному бину
      */
@@ -139,7 +138,7 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
 
     /**
      * Получение бина по классу. Если не существует бинов такого класса и его наследников или таких бинов несколько
-     * кидается исключение
+     * кидается исключение.Один бин может лежать под разными именами
      *
      * @param clazz
      * @param <T>
@@ -150,17 +149,22 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
         List<Map.Entry<String, BeanDefinition>> candidates = new ArrayList<>();
         for (Map.Entry<String, BeanDefinition> entry : beansDefinitions.entrySet()) {
             try {
-                if (clazz.isAssignableFrom(Class.forName(entry.getValue().getBeanClassName())))
-                    candidates.add(entry);
+                if (candidates.isEmpty()) {
+                    if (clazz.isAssignableFrom(Class.forName(entry.getValue().getBeanClassName())))
+                        candidates.add(entry);
+                } else
+                    for (Map.Entry<String, BeanDefinition> candidate : candidates) {
+                        if (!candidate.getValue().equals(entry.getValue()) && clazz.isAssignableFrom(Class.forName(entry.getValue().getBeanClassName()))) {
+                            throw new IllegalArgumentException("There are several beans for " + clazz.getName() + " class");
+                        }
+                    }
             } catch (ClassNotFoundException e) {
                 throw new BeanCreationException(e);
             }
         }
-        if (candidates.size() == 1)
-            return (T) getBean(candidates.get(0).getKey());
-        if (candidates.size() > 1)
-            throw new IllegalArgumentException("There are several beans for " + clazz.getName() + " class");
-        throw new IllegalArgumentException("Bean for class " + clazz.getName() + " doesn't exist");
+        if (candidates.isEmpty())
+            throw new IllegalArgumentException("Bean for class " + clazz.getName() + " doesn't exist");
+        return (T) getBean(candidates.get(0).getKey());
     }
 
     @Override
