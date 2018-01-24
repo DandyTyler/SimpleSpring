@@ -45,6 +45,7 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
                 MethodData factoryMethodData = beansDefinitions.get(beanName).getFactoryMethodData();
                 if (factoryMethodData != null) {
                     Method method = factoryMethodData.getMethod();
+                    method.setAccessible(true);
                     Object bean = method.invoke(Class.forName(factoryMethodData.getDeclaringClassName()).newInstance());
                     beans.put(beanName, bean);
                 } else {
@@ -53,6 +54,7 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
                     List<Constructor> autowiredAnnotatedConstructors = new ArrayList<>();
                     for (Constructor constructor : constructors) {
                         if (constructor.isAnnotationPresent(Autowired.class)) {
+                            constructor.setAccessible(true);
                             autowiredAnnotatedConstructors.add(constructor);
                         }
                     }
@@ -114,7 +116,6 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
         doPostProcessors();
     }
 
-
     /**
      * Получаем бин по имени. Если бин уже был создан, то возвращаем его иначе пытаемся создать. Если prototype то создаем
      * новый всегда
@@ -146,29 +147,21 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
      */
     @Override
     public <T> T getBean(Class<T> clazz) {
-        List<Map.Entry<String, BeanDefinition>> candidates = new ArrayList<>();
+        Map.Entry<String, BeanDefinition> candidate = null;
         for (Map.Entry<String, BeanDefinition> entry : beansDefinitions.entrySet()) {
             try {
-                if (candidates.isEmpty()) {
+                if (candidate == null) {
                     if (clazz.isAssignableFrom(Class.forName(entry.getValue().getBeanClassName())))
-                        candidates.add(entry);
-                } else
-                    for (Map.Entry<String, BeanDefinition> candidate : candidates) {
-                        if (!candidate.getValue().equals(entry.getValue()) && clazz.isAssignableFrom(Class.forName(entry.getValue().getBeanClassName()))) {
-                            throw new IllegalArgumentException("There are several beans for " + clazz.getName() + " class");
-                        }
-                    }
+                        candidate = entry;
+                } else if (!candidate.getValue().equals(entry.getValue()) && clazz.isAssignableFrom(Class.forName(entry.getValue().getBeanClassName()))) {
+                    throw new IllegalArgumentException("There are several beans for " + clazz.getName() + " class");
+                }
             } catch (ClassNotFoundException e) {
                 throw new BeanCreationException(e);
             }
         }
-        if (candidates.isEmpty())
+        if (candidate == null)
             throw new IllegalArgumentException("Bean for class " + clazz.getName() + " doesn't exist");
-        return (T) getBean(candidates.get(0).getKey());
-    }
-
-    @Override
-    public <T> T getBean(String name, Class<T> clazz) {
-        return null;
+        return (T) getBean(candidate.getKey());
     }
 }

@@ -5,8 +5,7 @@ import com.akos.context.annotation.Autowired;
 
 public class Printer {
 
-    @Autowired
-    PrintableString string;
+    private PrintableString string;
 
     public Printer() {
     }
@@ -15,6 +14,7 @@ public class Printer {
         this.string = string;
     }
 
+    @Autowired
     public void setString(PrintableString string) {
         this.string = string;
     }

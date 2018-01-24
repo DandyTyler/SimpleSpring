@@ -8,5 +8,8 @@ public class Test {
         BeanFactory context = new AnnotationConfigBeanFactory(Context.class);
         AutowiredConstructorTest p = (AutowiredConstructorTest) context.getBean("componentTest");
         p.print();
+
+        Printer printer = (Printer)context.getBean(Printer.class);
+        printer.print();
     }
 }

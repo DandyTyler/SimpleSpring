@@ -2,7 +2,7 @@ package com.akos.context.bean;
 
 import jdk.nashorn.internal.objects.annotations.Constructor;
 
-public class AnnotatedBeanDefinition implements BeanDefinition{
+public class AnnotatedBeanDefinition implements BeanDefinition {
 
     private MethodData factoryMethodData;
 
@@ -21,12 +21,13 @@ public class AnnotatedBeanDefinition implements BeanDefinition{
     public void setScope(String scope) {
         this.scope = scope;
     }
+
     @Override
     public String getScope() {
         return scope;
     }
 
-    public void setFactoryMethodData(MethodData factoryMethodData){
+    public void setFactoryMethodData(MethodData factoryMethodData) {
         this.factoryMethodData = factoryMethodData;
     }
 
