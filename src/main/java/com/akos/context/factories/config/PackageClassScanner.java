@@ -13,10 +13,10 @@ import java.util.List;
 public class PackageClassScanner {
 
     /**
-     * Scans all classes accessible from the context class loader which belong to the given package and subpackages.
+     * Cканирует все классы, доступные из загрузчика, которые относятся к данному пакету и подпакетам
      *
-     * @param packageName The base package
-     * @return The classes
+     * @param packageName Имя пакета
+     * @return Найденные классы
      * @throws ClassNotFoundException
      * @throws IOException
      */
@@ -46,11 +46,11 @@ public class PackageClassScanner {
     }
 
     /**
-     * Recursive method used to find all classes in a given directory and subdirs.
+     * Ищет все классы в даной директории и во вложенных директориях.
      *
-     * @param directory   The base directory
-     * @param packageName The package name for classes found inside the base directory
-     * @return The classes
+     * @param directory   Имя директории
+     * @param packageName Имя пакета для классов, найденных внутри директории
+     * @return Найденные классы
      * @throws ClassNotFoundException
      */
     private List<Class> findClasses(File directory, String packageName) throws ClassNotFoundException {

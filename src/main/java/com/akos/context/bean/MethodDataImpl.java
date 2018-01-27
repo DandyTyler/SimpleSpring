@@ -2,6 +2,9 @@ package com.akos.context.bean;
 
 import java.lang.reflect.Method;
 
+/**
+ * Реализация интерфейса MethodData
+ */
 public class MethodDataImpl implements MethodData {
 
     private final Method method;

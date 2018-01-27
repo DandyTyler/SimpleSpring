@@ -1,7 +1,8 @@
 package com.akos.context.bean;
 
-import jdk.nashorn.internal.objects.annotations.Constructor;
-
+/**
+ * Реализация интерфейса BeanDefinition для конфигурации через аннотации
+ */
 public class AnnotatedBeanDefinition implements BeanDefinition {
 
     private MethodData factoryMethodData;

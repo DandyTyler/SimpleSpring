@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Обработка аннотоации @Autowired. Пока только для полей
+ * Обработка аннотоации @Autowired.
  */
 public class AutowiredAnnotationBeanPostProcessor implements BeanPostProcessor {
 

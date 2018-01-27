@@ -35,7 +35,7 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
     }
 
     /**
-     * Создает бины из описания вызвая фабричный метод
+     * Создает бины из описания вызвая фабричный метод либо конструктор
      *
      * @param beanName имя бина
      */
@@ -110,6 +110,10 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
         }
     }
 
+    /**
+     * Позволяет регистрировать новые бины из класса-конфигурации.
+     * @param annotatedClasses Класс-конфигурация
+     */
     public void registerBeans(Class<?>... annotatedClasses) {
         reader.fillBeansDefinitions(annotatedClasses);
         createBeans();
@@ -120,8 +124,8 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
      * Получаем бин по имени. Если бин уже был создан, то возвращаем его иначе пытаемся создать. Если prototype то создаем
      * новый всегда
      *
-     * @param beanName
-     * @return
+     * @param beanName Имя бина
+     * @return Экземпляр бина
      */
     @Override
     public Object getBean(String beanName) {
@@ -141,9 +145,8 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
      * Получение бина по классу. Если не существует бинов такого класса и его наследников или таких бинов несколько
      * кидается исключение.Один бин может лежать под разными именами
      *
-     * @param clazz
-     * @param <T>
-     * @return
+     * @param clazz Класс
+     * @return Экземпляр бина
      */
     @Override
     public <T> T getBean(Class<T> clazz) {

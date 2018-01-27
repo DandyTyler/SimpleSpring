@@ -32,6 +32,10 @@ public class AnnotatedBeanDefinitionReader {
         this.beansDefinitions = beansDefinitions;
     }
 
+    /**
+     * Заполняет определения бинов на основе класса-конфигурации
+     * @param annotatedClasses класс отмеченный @Configuration
+     */
     public void fillBeansDefinitions(Class<?>... annotatedClasses) {
         for (Class annotatedClass : annotatedClasses) {
             if (annotatedClass.isAnnotationPresent(Configuration.class)) {
