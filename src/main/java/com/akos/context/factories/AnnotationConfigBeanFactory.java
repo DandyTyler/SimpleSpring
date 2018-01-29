@@ -112,12 +112,13 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
 
     /**
      * Позволяет регистрировать новые бины из класса-конфигурации.
+     *
      * @param annotatedClasses Класс-конфигурация
      */
     public void registerBeans(Class<?>... annotatedClasses) {
         reader.fillBeansDefinitions(annotatedClasses);
-        createBeans();
-        doPostProcessors();
+//        createBeans();
+//        doPostProcessors();
     }
 
     /**
@@ -128,7 +129,7 @@ public class AnnotationConfigBeanFactory implements BeanFactory {
      * @return Экземпляр бина
      */
     @Override
-    public Object getBean(String beanName) {
+    public synchronized Object getBean(String beanName) {
         if (beans.containsKey(beanName)) {
             if (beansDefinitions.get(beanName).getScope().equals("prototype")) {
                 createBean(beanName);
